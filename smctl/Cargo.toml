@@ -4,3 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+libonm = { path = "../libonm" }
+tokio = { version = "1", features = ["full"] }
+clap = { version = "4.1", features = ["derive", "env"] }
+env_logger = { version = "0.11" }
