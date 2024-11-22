@@ -3,7 +3,7 @@
 
 #include <infiniband/verbs.h>
 #include <infiniband/sa.h>
-#include <infiniband/mad.h>
-#include <infiniband/umad.h>
+// #include <infiniband/mad.h>
+// #include <infiniband/umad.h>
 
 #endif

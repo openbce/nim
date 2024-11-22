@@ -34,7 +34,7 @@ fn main() {
         .prepend_enum_name(false)
         .size_t_is_usize(true)
         .generate_comments(true)
-        .parse_callbacks(Box::new(bindgen::CargoCallbacks))
+        .parse_callbacks(Box::new(bindgen::CargoCallbacks::new()))
         .generate()
         .expect("Unable to generate bindings");
 
@@ -51,7 +51,7 @@ fn main() {
         .blocklist_type("u16")
         .blocklist_type("u32")
         .blocklist_type("u64")
-        .parse_callbacks(Box::new(bindgen::CargoCallbacks))
+        .parse_callbacks(Box::new(bindgen::CargoCallbacks::new()))
         .generate()
         .expect("Unable to generate bindings");
 

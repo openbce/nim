@@ -10,7 +10,6 @@ use types::Context;
 
 mod discover;
 mod list;
-mod redfish;
 mod types;
 mod view;
 
