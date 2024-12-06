@@ -1,9 +1,8 @@
-# Network Infrastructure Management
+# Open Network Management
 
+## libonm
 
-## libnim
-
-The lib for network infrastructure management.
+The lib for open network management.
 
 ## xpuctl
 
@@ -16,3 +15,9 @@ The command line to manage HCA of host.
 ## smctl
 
 The command line to manage subnet manager.
+
+## onm-shell
+
+```
+docker build -t openbce/onm-shell .
+```
