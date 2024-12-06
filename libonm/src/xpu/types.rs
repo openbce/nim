@@ -1,15 +1,36 @@
-use crate::types::{Context, BMC};
-use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
-use std::{fmt, io, sync::Arc};
+use thiserror::Error;
 
-use super::{bluefield::Bluefield, Redfish, RedfishError};
+use super::redfish::{self, Redfish, RedfishError};
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub enum XPUStatus {
     Ready,
     Error,
     Unknown,
+}
+
+#[derive(Error, Debug)]
+pub enum XPUError {
+    #[error("{0}")]
+    Internal(String),
+    #[error("'{0}' not found")]
+    NotFound(String),
+    #[error("invalid configuration '{0}'")]
+    InvalidConfig(String),
+}
+
+impl From<RedfishError> for XPUError {
+    fn from(value: RedfishError) -> Self {
+        XPUError::Internal(value.to_string())
+    }
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct BMC {
+    pub address: String,
+    pub username: String,
+    pub password: String,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -46,13 +67,13 @@ impl ToString for XPUStatus {
 }
 
 impl XPU {
-    pub async fn new(bmc: &BMC) -> Result<Self, RedfishError> {
-        let redfish: Box<Bluefield> = Box::new(Bluefield::new(bmc)?);
+    pub async fn new(bmc: &BMC) -> Result<Self, XPUError> {
+        let redfish = redfish::build(bmc)?;
         let bmc_ver = redfish.bmc_version().await?;
 
         let xpu = XPU {
             redfish,
-            vendor: bmc.vendor.clone(),
+            vendor: "-".to_string(),
             serial_number: "-".to_string(),
             firmware_version: "-".to_string(),
             bmc_version: bmc_ver.version,
@@ -62,24 +83,4 @@ impl XPU {
 
         Ok(xpu)
     }
-}
-
-pub async fn discover(bmc: &BMC) -> Result<(), RedfishError> {
-    let redfish = Box::new(Bluefield::new(bmc)?);
-
-    if redfish.bmc_version().await.is_ok() {
-        return Ok(());
-    }
-
-    // Try to change the default password.
-    let default_bmc = Bluefield::default_bmc(&bmc.name, &bmc.address);
-    let default_redfish = Box::new(Bluefield::new(&default_bmc)?);
-    default_redfish
-        .change_password(bmc.password.clone().unwrap())
-        .await?;
-
-    // Retry BMC version by the password.
-    let _ = redfish.bmc_version().await?;
-
-    Ok(())
 }

@@ -1,7 +1,7 @@
-use libufm::{UFMConfig, UFMError};
+use libonm::sm::{self, UFMConfig, UFMError};
 
 pub async fn run(conf: UFMConfig) -> Result<(), UFMError> {
-    let ufm = libufm::connect(conf)?;
+    let ufm = sm::connect(conf)?;
     let config = ufm.get_configuration().await?;
 
     println!("subnet prefix  : {}", config.subnet_prefix);

@@ -1,16 +1,17 @@
-use crate::redfish::{RedfishError, XPU};
+use libonm::xpu::{XPUError, BMC, XPU};
+
 use crate::types::Context;
 
-pub async fn run(cxt: &Context) -> Result<(), RedfishError> {
+pub async fn run(cxt: &Context) -> Result<(), XPUError> {
     println!(
         "{:<20}{:<10}{:<15}{:<10}{:<15}{:<15}{}",
         "ID", "Status", "Vendor", "FW", "SN", "BMC", "Address"
     );
     for bmc in cxt.bmc.iter() {
-        let xpu = XPU::new(bmc).await?;
+        let xpu = XPU::new(&BMC::from(bmc)).await?;
         println!(
             "{:<20}{:<10}{:<15}{:<10}{:<15}{:<15}{}",
-            xpu.bmc.name,
+            bmc.name,
             xpu.status.to_string(),
             xpu.vendor,
             xpu.firmware_version,

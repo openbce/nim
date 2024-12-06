@@ -1,6 +1,6 @@
 use clap::{Parser, Subcommand};
 
-use libufm::{UFMCert, UFMConfig, UFMError};
+use libonm::sm::{UFMCert, UFMConfig, UFMError};
 
 mod bind;
 mod create;

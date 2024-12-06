@@ -1,4 +1,4 @@
-use libufm::{Partition, PartitionKey, PartitionQoS, UFMConfig, UFMError};
+use libonm::sm::{self, Partition, PartitionKey, PartitionQoS, UFMConfig, UFMError};
 
 pub struct UpdateOptions {
     pub pkey: String,
@@ -10,7 +10,7 @@ pub struct UpdateOptions {
 }
 
 pub async fn run(conf: UFMConfig, opt: &UpdateOptions) -> Result<(), UFMError> {
-    let ufm = libufm::connect(conf)?;
+    let ufm = sm::connect(conf)?;
 
     let p = Partition {
         name: "".to_string(),

@@ -1,14 +1,12 @@
 use std::collections::HashMap;
 
-use base64::prelude::*;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 use url::Url;
 
-use self::rest::{RestClient, RestClientConfig, RestError, RestScheme};
 use self::types::{Configuration, PhysicalPort, Port};
+use crate::rest::{RestClient, RestConfig, RestError};
 
-mod rest;
 mod types;
 
 pub use types::PortType;
@@ -182,10 +180,10 @@ pub enum UFMError {
 impl From<RestError> for UFMError {
     fn from(e: RestError) -> Self {
         match e {
-            RestError::Unknown(msg) => UFMError::Unknown(msg),
             RestError::NotFound(msg) => UFMError::NotFound(msg),
             RestError::AuthFailure(msg) => UFMError::InvalidConfig(msg),
             RestError::InvalidConfig(msg) => UFMError::InvalidConfig(msg),
+            _ => UFMError::Unknown(String::from("Unknown Rest Error")),
         }
     }
 }
@@ -212,41 +210,19 @@ pub fn connect(conf: UFMConfig) -> Result<Ufm, UFMError> {
         .host_str()
         .ok_or(UFMError::InvalidConfig("invalid UFM host".to_string()))?;
 
-    let (base_path, auth_info) = match &conf.token {
-        None if conf.cert.is_some() => {
-            let auth_cert = conf.cert.unwrap().clone();
-            (
-                "/ufmRest".to_string(),
-                format!(
-                    "{}\n{}\n{}",
-                    auth_cert.ca_crt, auth_cert.tls_key, auth_cert.tls_crt
-                ),
-            )
-        }
-        None => {
-            let password = conf
-                .password
-                .clone()
-                .ok_or(UFMError::InvalidConfig("password is empty".to_string()))?;
-            let username = conf
-                .username
-                .clone()
-                .ok_or(UFMError::InvalidConfig("username is empty".to_string()))?;
+    let password = conf
+        .password
+        .clone()
+        .ok_or(UFMError::InvalidConfig("password is empty".to_string()))?;
+    let username = conf
+        .username
+        .clone()
+        .ok_or(UFMError::InvalidConfig("username is empty".to_string()))?;
 
-            (
-                "/ufmRest".to_string(),
-                BASE64_STANDARD.encode(format!("{}:{}", username, password)),
-            )
-        }
-        Some(t) => ("/ufmRestV3".to_string(), t.to_string()),
-    };
-
-    let c = RestClient::new(&RestClientConfig {
+    let c = RestClient::new(&RestConfig {
         address: address.to_string(),
-        port: addr.port(),
-        auth_info,
-        base_path,
-        scheme: RestScheme::from(addr.scheme().to_string()),
+        password,
+        username,
     })?;
 
     Ok(Ufm { client: c })
@@ -266,15 +242,14 @@ impl Ufm {
             .qos
             .ok_or(UFMError::InvalidConfig("no partition qos".to_string()))?;
 
-        let data = serde_json::to_string(&PKeyQoS {
+        let qos = PKeyQoS {
             pkey: p.pkey.to_string(),
             mtu_limit: qos.mtu_limit,
             rate_limit: qos.rate_limit,
             service_level: qos.service_level,
-        })
-        .map_err(|_| UFMError::InvalidConfig("invalid partition".to_string()))?;
+        };
 
-        self.client.put(&path, data).await?;
+        let _ = self.client.put(&path, &qos).await?;
 
         Ok(())
     }
@@ -300,10 +275,7 @@ impl Ufm {
             guids,
         };
 
-        let data = serde_json::to_string(&pkey)
-            .map_err(|_| UFMError::InvalidConfig("invalid partition".to_string()))?;
-
-        self.client.post(&path, data).await?;
+        let _ = self.client.post(&path, &pkey).await?;
 
         Ok(())
     }
@@ -326,10 +298,7 @@ impl Ufm {
             guids,
         };
 
-        let data = serde_json::to_string(&pkey)
-            .map_err(|_| UFMError::InvalidConfig("invalid partition".to_string()))?;
-
-        self.client.post(&path, data).await?;
+        self.client.post(&path, &pkey).await?;
 
         Ok(())
     }
@@ -364,7 +333,7 @@ impl Ufm {
         }
 
         let path = String::from("/resources/pkeys?qos_conf=true");
-        let pkey_qos: HashMap<String, Pkey> = self.client.list(&path).await?;
+        let pkey_qos: Vec<(String, Pkey)> = self.client.list(&path).await?;
 
         let mut parts = Vec::new();
 

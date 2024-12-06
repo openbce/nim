@@ -1,3 +1,5 @@
 pub mod hca;
-pub mod xpu;
 pub mod sm;
+pub mod xpu;
+
+mod rest;

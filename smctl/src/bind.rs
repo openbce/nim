@@ -1,7 +1,7 @@
-use libufm::{Partition, PartitionKey, PortConfig, PortMembership, UFMConfig, UFMError};
+use libonm::sm::{self, Partition, PartitionKey, PortConfig, PortMembership, UFMConfig, UFMError};
 
 pub async fn run(conf: UFMConfig, pkey: &str, guids: &Vec<String>) -> Result<(), UFMError> {
-    let ufm = libufm::connect(conf)?;
+    let ufm = sm::connect(conf)?;
 
     let mut pbs = vec![];
     for g in guids {

@@ -1,4 +1,4 @@
-use libufm::{Partition, PartitionKey, PortConfig, PortMembership, UFMConfig, UFMError};
+use libonm::sm::{self, Partition, PartitionKey, PortConfig, PortMembership, UFMConfig, UFMError};
 
 pub struct CreateOptions {
     pub pkey: String,
@@ -9,7 +9,7 @@ pub struct CreateOptions {
 }
 
 pub async fn run(conf: UFMConfig, opt: &CreateOptions) -> Result<(), UFMError> {
-    let ufm = libufm::connect(conf)?;
+    let ufm = sm::connect(conf)?;
 
     let mut pbs = vec![];
     for g in &opt.guids {

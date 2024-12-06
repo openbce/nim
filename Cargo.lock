@@ -851,8 +851,25 @@ dependencies = [
 name = "libonm"
 version = "0.1.0"
 dependencies = [
+ "async-trait",
+ "base64",
  "bindgen",
+ "bytes",
  "cc",
+ "clap",
+ "http",
+ "libudev",
+ "numeric_cast",
+ "reqwest",
+ "scopeguard",
+ "serde",
+ "serde_json",
+ "thiserror",
+ "tokio",
+ "toml",
+ "tracing",
+ "tracing-subscriber",
+ "url",
 ]
 
 [[package]]
@@ -1002,6 +1019,12 @@ checksum = "5c7398b9c8b70908f6371f47ed36737907c87c52af34c268fed0bf0ceb92ead9"
 dependencies = [
  "libc",
 ]
+
+[[package]]
+name = "numeric_cast"
+version = "0.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "cf70ee2d9b1737d1836c20d9f8f96ec3901b2bf92128439db13237ddce9173a5"
 
 [[package]]
 name = "object"

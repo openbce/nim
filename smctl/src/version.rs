@@ -1,7 +1,7 @@
-use libufm::{UFMConfig, UFMError};
+use libonm::sm::{self, UFMConfig, UFMError};
 
 pub async fn run(conf: UFMConfig) -> Result<(), UFMError> {
-    let ufm = libufm::connect(conf)?;
+    let ufm = sm::connect(conf)?;
     let v = ufm.version().await?;
 
     println!("{}", v);

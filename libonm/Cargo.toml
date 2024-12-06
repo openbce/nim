@@ -4,6 +4,27 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+
+clap = { workspace = true }
+serde = { workspace = true }
+toml = { workspace = true }
+tokio = { workspace = true }
+async-trait = { workspace = true }
+thiserror = { workspace = true }
+serde_json = { workspace = true }
+
+reqwest = { workspace = true }
+http = { workspace = true }
+bytes = { workspace = true }
+base64 = { workspace = true }
+url = { workspace = true }
+
+numeric_cast = "0.2"
+libudev = "0.3"
+scopeguard = "1.2"
+
 
 [build-dependencies]
 bindgen = "0.70"

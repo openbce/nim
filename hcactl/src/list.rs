@@ -14,10 +14,10 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-use ::libhca;
+use libonm::hca;
 
 pub fn run() -> Result<(), color_eyre::Report> {
-    let hcas = libhca::list_pci_devices()?;
+    let hcas = hca::list_pci_devices()?;
 
     for hca in hcas {
         println!("----------------------------------------------");

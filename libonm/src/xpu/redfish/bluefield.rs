@@ -1,13 +1,11 @@
-use crate::redfish::Redfish;
-use crate::types::BMC;
-use async_trait::async_trait;
+use super::{BMCVersion, Redfish, RedfishError, BMC};
 
-use super::rest::{RestClient, RestConfig};
-use super::xpu::BMCVersion;
-use super::RedfishError;
+use crate::rest::{RestClient, RestConfig};
+use async_trait::async_trait;
 
 pub struct Bluefield {
     rest: RestClient,
+    bmc: BMC,
 }
 
 const DEFAULT_PASSWORD: &str = "0penBmc";
@@ -19,10 +17,9 @@ impl Redfish for Bluefield {
     async fn change_password(&self, passwd: String) -> Result<(), RedfishError> {
         let mut data = std::collections::HashMap::new();
         data.insert("Password", passwd);
-        let data = serde_json::to_string(&data).unwrap();
 
         self.rest
-            .patch("/redfish/v1/AccountService/Accounts/root", data)
+            .patch("/redfish/v1/AccountService/Accounts/root", &data)
             .await
             .map_err(RedfishError::from)?;
 
@@ -36,7 +33,25 @@ impl Redfish for Bluefield {
             .await
             .map_err(RedfishError::from)?;
 
-        serde_json::from_str(resp.as_str()).map_err(|e| RedfishError::Json(e.to_string()))
+        Ok(resp)
+    }
+
+    async fn discover(&self) -> Result<(), RedfishError> {
+        if self.bmc_version().await.is_ok() {
+            return Ok(());
+        }
+
+        // Try to change the default password.
+        let default_bmc = Bluefield::default_bmc(&self.bmc.username, &self.bmc.address);
+        let default_redfish = Box::new(Bluefield::new(&default_bmc)?);
+        default_redfish
+            .change_password(self.bmc.password.clone())
+            .await?;
+
+        // Retry BMC version by the password.
+        let _ = self.bmc_version().await?;
+
+        Ok(())
     }
 }
 
@@ -44,22 +59,21 @@ impl Bluefield {
     pub fn new(bmc: &BMC) -> Result<Bluefield, RedfishError> {
         let config = RestConfig {
             address: bmc.address.clone(),
-            password: bmc.password.clone().unwrap_or(DEFAULT_PASSWORD.to_string()),
-            username: bmc.username.clone().unwrap_or(DEFAULT_USER.to_string()),
+            password: bmc.password.clone(),
+            username: bmc.username.clone(),
         };
 
         Ok(Bluefield {
             rest: RestClient::new(&config)?,
+            bmc: bmc.clone(),
         })
     }
 
-    pub fn default_bmc(name: &str, addr: &str) -> BMC {
+    fn default_bmc(name: &str, addr: &str) -> BMC {
         BMC {
-            name: name.to_string(),
             address: addr.to_string(),
-            vendor: VENDOR.to_string(),
-            password: Some(DEFAULT_PASSWORD.to_string()),
-            username: Some(DEFAULT_USER.to_string()),
+            password: DEFAULT_PASSWORD.to_string(),
+            username: DEFAULT_USER.to_string(),
         }
     }
 }
